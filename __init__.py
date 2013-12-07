@@ -1,2 +1,0 @@
-import load
-import smartload
