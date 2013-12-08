@@ -110,6 +110,21 @@ def get_dip_vector(strike = None, dip = None, angle='degrees'):
     return np.cross(norm, s)
 
 
+def get_rake_from_shear_components(strike_shear = 0, dip_shear = 0,
+                                   angle = 'degrees'):
+    """
+    Takes components of fault shear (strike or dip) and returns
+    rake in Aki and Richards convention (default units are degrees).
+
+    Specify angle='radians' to get output in radians.
+    """
+    
+    rake = np.arctan2(strike_shear, dip_shear)
+    if angle == 'degrees':
+        rake = np.degrees(rake)
+
+    return rake
+
 def normal_stress_from_xyz(strike = None, dip = None, stress_tensor = None, 
                            angle = 'degrees'):
     """
