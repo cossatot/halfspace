@@ -1,5 +1,7 @@
 info
 build
 dist
+halfspace.egg-info
+.idea
 *.pyc
 *.swp
