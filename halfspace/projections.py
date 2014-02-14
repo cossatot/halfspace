@@ -119,7 +119,7 @@ def get_rake_from_shear_components(strike_shear = 0, dip_shear = 0,
     Specify angle='radians' to get output in radians.
     """
     
-    rake = np.arctan2(strike_shear, dip_shear)
+    rake = np.arctan2(dip_shear, -strike_shear)
     if angle == 'degrees':
         rake = np.degrees(rake)
 
@@ -203,12 +203,9 @@ def max_shear_stress_from_xyz(strike = None, dip = None, stress_tensor = None,
                                         angle = angle)
 
     tau_max = (tau_ss **2 + tau_dd **2) **0.5
-
-    tau_rake = np.arctan2(tau_dd, tau_ss) # rake in Aki + Richards convention
     
-    if angle == 'degrees':
-        tau_rake = np.degrees( tau_rake)
-    
+    tau_rake = get_rake_from_shear_components(strike_shear=tau_ss,
+                                              dip_shear=tau_dd, angle=angle)    
     return [tau_max, tau_rake]
 
 
@@ -242,6 +239,15 @@ def make_xyz_stress_tensor(sig_xx = 0, sig_yy = 0, sig_zz = 0, sig_xy = 0,
     T = np.matrix([ [ sig_xx,  sig_xy, sig_xz],
                     [ sig_xy,  sig_yy, sig_yz],
                     [ sig_xz,  sig_yz, sig_zz] ])
+    return T
+
+
+def make_xy_stress_tensor(sig_xx = 0, sig_yy = 0, sig_xy = 0):
+    """Takes stress components and returns a 2x2 tensor."""
+
+    T = np.matrix([ [ sig_xx, sig_xy],
+                    [ sig_xy, sig_yy] ])
+
     return T
 
 
@@ -667,3 +673,26 @@ def sphere_to_xyz(lon, lat, elev = 1):
     return np.array([x, y, z])
 
 
+def rotate_XY_tensor(T, theta=0, input_angle='radians', out_type='matrix'):
+    """ Rotates a 2x2 tensor by angle theta (in unit circle convention,
+    not azimuthal convention).  Theta is by default in radians.  Specify
+    angle_input = 'degrees' for input angle in degrees.
+
+    Returns 2x2 rotated tensor.
+    """
+    theta = np.radians(theta) if input_angle == 'degrees' else theta
+
+    s_xx = (T[0,0] * np.cos(theta)**2 + T[1,1] * np.sin(theta)**2
+           - 2 * T[1,0] * np.sin(theta) * np.cos(theta) )
+    
+    s_yy = (T[0,0] * np.sin(theta)**2 + T[1,1] * np.cos(theta)**2
+           + 2 * T[1,0] * np.sin(theta) * np.cos(theta) )
+    
+    s_xy = ( (T[0,0] - T[1,1]) * np.sin(theta) * np.cos(theta)
+           + T[0,1] * (np.cos(theta)**2 - np.sin(theta)**2) )
+    
+    T_rot = make_xy_stress_tensor(s_xx=s_xx, s_yy=s_yy, s_xy=s_xy)
+
+    T_rot = np.array(T_rot) if out_type == 'array' else T_rot
+
+    return T_rot
