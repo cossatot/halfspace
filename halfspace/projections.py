@@ -719,7 +719,7 @@ def calc_xy_princ_stresses_from_stress_comps(s_xx=0, s_yy=0, s_xy=0):
     2 dimensional stress tensor and returns the (x,y) values of the
     maximum and minimum principal stresses.
     '''
-    T = make_xy_stress_tensor(s_xx=s_xx, s_yy=s_yy, s_xy=s_xy)
+    T = make_xy_stress_tensor(sig_xx=s_xx, sig_yy=s_yy, sig_xy=s_xy)
     
     max_x, max_y, min_x, min_y = get_cartesian_xy_stress_dirs(T)
 
