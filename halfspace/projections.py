@@ -385,7 +385,7 @@ def sorted_eigens(A):
     idx = eig_vals.argsort()
     
     eig_vals = eig_vals[idx]
-    eig_vecs = eig_vecs[:,idx]
+    eig_vecs = np.array( eig_vecs[:,idx] )
 
     return eig_vals, eig_vecs
     
@@ -696,3 +696,31 @@ def rotate_XY_tensor(T, theta=0, input_angle='radians', out_type='matrix'):
     T_rot = np.array(T_rot) if out_type == 'array' else T_rot
 
     return T_rot
+
+
+def get_cartesian_xy_stress_dirs(T):
+    ''' Takes a horizontal stress tensor and calculates the (x,y)
+    values of the maximum and minimum principal stresses.
+    '''
+
+    vals, vecs = sorted_eigens(T)
+    vecs = np.array(vecs)
+
+    max_x = vecs[0,1] * vals[1]
+    max_y = vecs[1,1] * vals[1]
+    min_x = vecs[0,0] * vals[0]
+    min_y = vecs[1,0] * vals[0]
+    
+    return max_x, max_y, min_x, min_y
+
+
+def calc_xy_princ_stresses_from_stress_comps(s_xx=0, s_yy=0, s_xy=0):
+    ''' Takes the three independent stress tensor components for a
+    2 dimensional stress tensor and returns the (x,y) values of the
+    maximum and minimum principal stresses.
+    '''
+    T = make_xy_stress_tensor(sig_xx=s_xx, sig_yy=s_yy, sig_xy=s_xy)
+    
+    max_x, max_y, min_x, min_y = get_cartesian_xy_stress_dirs(T)
+
+    return max_x, max_y, min_x, min_y
