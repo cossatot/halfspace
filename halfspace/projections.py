@@ -422,6 +422,79 @@ def angle2strike(angle, output='degrees', input='radians'):
     return strike if output == 'degrees' else np.deg2rad(strike)
 
 
+def xy_to_azimuth(x1, y1, x0=0, y0=0, output='degrees'):
+    """ Calculates the azimuth of a line extending from (x0, y0)
+    to (x1, y1).  (x0, y0) defaults to the origin.
+
+    Returns azimuth (0=North, 90=E) by default.  Set output='radians'
+    for output in radians, if there is some reason to do so.
+
+    Can operate on scalars or vectors.
+
+    """
+    
+    rad = np.arctan2(YY, XX)
+    
+    az = angle_to_azimuth(rad, output=output)
+    
+    return az
+
+
+def angle_to_azimuth_scalar(angle):
+    """
+    Helper function for angle_to_azimuth, for scalar inputs.
+
+    Takes an angle (in unit circle coordinates) and returns an azimuth
+    (in compass direction coordinates).
+    """
+    az = - (angle - 90)
+    
+    while az < 0:
+        az += 360
+    while az > 360:
+        az -= 360
+    
+    return az
+
+
+def angle_to_azimuth_vector(angle):
+    """
+    Helper function for angle_to_azimuth, for scalar inputs.
+
+    Takes an angle (in unit circle coordinates) and returns an azimuth
+    (in compass direction coordinates).
+    """
+    az = - (angle - 90)
+    
+    az[az < 0] += 360
+    az[az > 360] += 360
+    
+    return az
+    
+
+def angle_to_azimuth(angle, input='radians', output='degrees'):
+    """
+    Takes an angle (in unit circle coordinates) and returns an azimuth
+    (in compass direction coordinates, i.e. N=0 degrees, E=90 degrees).  
+    Specify input='degrees' or output='radians' if need be.
+    
+    Works on scalars, vectors, and Pandas Series.
+    """
+    if input == 'radians':
+        angle = np.rad2deg(angle)
+    
+    if np.isscalar(angle):
+        az = angle_to_azimuth_scalar(angle)
+    
+    else:
+        az = angle_to_azimuth_vector(angle)
+        
+    if output=='radians':
+        az = np.deg2rad(az)
+    
+    return az
+
+
 def pts2strike(r_point, l_point, output = 'degrees'):
     """ Takes two (x,y) points and calculates the right-
     hand-rule strike between them, where the right point
@@ -719,7 +792,7 @@ def calc_xy_princ_stresses_from_stress_comps(s_xx=0, s_yy=0, s_xy=0):
     2 dimensional stress tensor and returns the (x,y) values of the
     maximum and minimum principal stresses.
     '''
-    T = make_xy_stress_tensor(s_xx=s_xx, s_yy=s_yy, s_xy=s_xy)
+    T = make_xy_stress_tensor(sig_xx=s_xx, sig_yy=s_yy, sig_xy=s_xy)
     
     max_x, max_y, min_x, min_y = get_cartesian_xy_stress_dirs(T)
 
