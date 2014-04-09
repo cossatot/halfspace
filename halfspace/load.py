@@ -569,7 +569,7 @@ def half_fft_convolve(in1, in2, size, mode = 'full', return_type='real'):
 
 def do_b_convo( component = None, z = 1, Fv = 1, load = None, lamb = 1, mu = 1,
                kernel_radius = None, kernel_res = None, load_mode = 'topo',
-               size = None, conv_mode = 'topo', circular = True):
+               size = None, conv_mode = 'valid', circular = True):
 
     kernel = make_b_kernel_2d( component = component, z = z, Fv = Fv, mu = mu,
                               lamb = lamb, kernel_radius = kernel_radius,
