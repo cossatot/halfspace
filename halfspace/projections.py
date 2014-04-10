@@ -433,7 +433,7 @@ def xy_to_azimuth(x1, y1, x0=0, y0=0, output='degrees'):
 
     """
     
-    rad = np.arctan2(YY, XX)
+    rad = np.arctan2( (y1-y0), (x1-x0) )
     
     az = angle_to_azimuth(rad, output=output)
     
