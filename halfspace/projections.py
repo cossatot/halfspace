@@ -125,6 +125,7 @@ def get_rake_from_shear_components(strike_shear = 0, dip_shear = 0,
 
     return rake
 
+
 def normal_stress_from_xyz(strike = None, dip = None, stress_tensor = None, 
                            angle = 'degrees'):
     """
@@ -249,7 +250,7 @@ def normal_stress_on_optimal_plane(T, friction_angle = 30,
     Returns scalar.
     """
     
-    strike, dip = find_optimal_plane(T, friction_angle, friction_coefficent)
+    strike, dip = find_optimal_plane(T, friction_angle, friction_coefficient)
 
     return normal_stress_from_xyz(strike, dip, T)
 
