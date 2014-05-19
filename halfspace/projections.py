@@ -228,6 +228,64 @@ def coulomb_shear_stress_from_xyz(strike = None, dip = None,
     return tau_cs
 
 
+def shear_stress_on_optimal_plane(T, friction_angle = 30, 
+                                  friction_coefficent = None):
+    """
+    Calculates shear stress on optimal fault plane, given a stress tensor T.
+    
+    Returns scalar.
+    """
+
+    strike, dip = find_optimal_plane(T, friction_angle, friction_coefficent)
+
+    return max_shear_stress_from_xyz(strike, dip, T)
+
+
+def normal_stress_on_optimal_plane(T, friction_angle = 30,
+                                   friction_coefficient = None):
+    """
+    Calculates normal stress on optimal fault plane, given a stress tensor T.
+
+    Returns scalar.
+    """
+    
+    strike, dip = find_optimal_plane(T, friction_angle, friction_coefficent)
+
+    return normal_stress_from_xyz(strike, dip, T)
+
+
+def find_optimal_plane(T, friction_angle = None, friction_coefficient = None,
+                        angle = 'degrees'):
+    '''
+    Finds strike and dip of optimal fault plane given a stress tensor T,
+    and an internal friction angle or friction coefficient.
+
+    If no values are specified, defaults to a friction angle of 30 degrees.
+    If both friction angle and friction coefficient are specified,
+    friction angle will override friction coefficient.
+
+    Default angle is in degrees.
+    '''
+    
+    if friction_angle == None:
+        if friction_coefficient:
+            friction_angle = np.degrees( np.arctan( friction_coefficient) )
+        else:
+            friction_angle = 30.
+    else:
+        if angle == 'radians':
+            friction_angle = np.degrees( friction_angle)
+   
+    angle_from_sigma1 = 45 - friction_angle / 2
+    
+    pT, pN, pP = get_princ_axes_xyz(T)
+
+    strike = pP.trend - 90
+    dip = pP.plunge - angle_from_sigma1
+
+    return strike, dip
+
+
 def make_xyz_stress_tensor(sig_xx = 0, sig_yy = 0, sig_zz = 0, sig_xy = 0,
                            sig_xz = 0, sig_yz = 0):
     """
@@ -398,10 +456,22 @@ def strike2angle(strike, output='radians', input='degrees'):
 
     Returns angle
     """
-    if input == 'radians':
-        strike = np.rad2deg(strike)
+        
+    return azimuth_to_angle(strike, output, input)
 
-    angle_deg = (-strike) + 90
+
+def azimuth_to_angle(azimuth, output='radians', input='degrees'):
+    """ Takes azimuth (in degrees by default) and changes it into
+    unit vector rotation angle (e.g. CCW from x axis/horizontal).
+
+    defaults to output in radians, specify 'degrees' for degrees.
+
+    Returns angle
+    """
+    if input == 'radians':
+        azimuth = np.rad2deg(azimuth)
+
+    angle_deg = (-azimuth) + 90
     angle_rad = np.deg2rad(angle_deg)
 
     return angle_deg if output == 'degrees' else angle_rad
