@@ -152,7 +152,6 @@ def calc_b_stress_xy( x, y, z = 1, Fv = 1, mu = 1, lamb = 1):
 
 """ Boussinesq Green's function kernel constructors"""
 
-
 def make_b_kernel_2d( component = None, z = 1, Fv = 1, kernel_radius = 100,
                      kernel_res = 1, mu = 1, lamb = 1, circular = True):
     """ 
@@ -184,7 +183,9 @@ def make_b_kernel_2d( component = None, z = 1, Fv = 1, kernel_radius = 100,
 
 def _get_b_kernel_2d( component = None, x = None, y = None, z = None,
                      Fv = None, mu = None, lamb = None):
-    """ Gets the csdfasf
+    """ 
+    Calculates the approprate Green's function on the grid given
+    the components and the stress component.
     """
 
     if component == 'xx':
@@ -462,7 +463,9 @@ def make_c_kernel_2d( component = None, z = 1, Fh = 1, kernel_radius = 100,
 
 def _get_c_kernel_2d( component = None, x = None, y = None, z = None,
                      Fh = None, mu = None, lamb = None, f_dir = None):
-    """ Gets the csdfasf
+    """    
+    Calculates the approprate Green's function on the grid given
+    the components and the stress component.
     """
     # xx
     if component == 'xx' and f_dir == 'x':
@@ -530,11 +533,12 @@ def _centered(arr, newsize):
 
 
 def half_fft_convolve(in1, in2, size, mode = 'full', return_type='real'):
-    """rewrite of fftconvolve from scipy.signal ((c) Travis Oliphant 1999-2002)
-        to deal with fft convolution where one signal is not fft transformed
-        and the other one is.  Application is, for example, in a loop where
-        convolution happens repeatedly with different kernels over the same
-        signal.  First input is not transformed, second input is.
+    """
+    Rewrite of fftconvolve from scipy.signal ((c) Travis Oliphant 1999-2002)
+    to deal with fft convolution where one signal is not fft transformed
+    and the other one is.  Application is, for example, in a loop where
+    convolution happens repeatedly with different kernels over the same
+    signal.  First input is not transformed, second input is.
     """
     s1 = np.array(in1.shape)
     s2 = size - s1 + 1
