@@ -710,8 +710,8 @@ def extrude_fault_trace(lon_pts = None, lat_pts = None, elev_pts = None,
     lon_tile, depth_grid = np.meshgrid(lon_pts, depth_vec)
 
     # take base arrays and apply changes, based on strike, dip, depth
-    lon_pts_grid = depth_grid * (np.cos( dip) * np.sin( dip_dir) * deg_per_m)
-    lat_pts_grid = depth_grid * (np.cos( dip) * np.cos( dip_dir) * deg_per_m)
+    lon_pts_grid = depth_grid * (np.cos( dip) * np.cos( dip_dir) * deg_per_m)
+    lat_pts_grid = depth_grid * (np.cos( dip) * np.sin( dip_dir) * deg_per_m)
     
     out_lon_pts = lon_tile + lon_pts_grid
     out_lat_pts = lat_tile + lat_pts_grid
