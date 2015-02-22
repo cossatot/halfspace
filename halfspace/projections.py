@@ -1,3 +1,4 @@
+from __future__ import division
 import numpy as np
 from scipy.stats import linregress
 
@@ -65,17 +66,18 @@ def get_sd_from_norm_vec( norm_vec, output='degrees', in_format = 'array'):
     
     if np.isscalar(strike):
         if np.isnan(strike):
-            strike = 0
-        if strike_sin < 0:
+            strike = 0.
+        if strike_sin < 0.:
             strike += 2 * (np.pi - strike)
     else:
-        strike[np.isnan(strike)] = 0
+        strike[np.isnan(strike)] = 0.
         strike[strike_sin < 0] += 2 * (np.pi - strike[strike_sin < 0])
 
     if np.isscalar(strike):
         if dip > np.pi/2.:
-            dip = np.pi/2 - dip
-            strike = strike - np.pi if strike > np.pi else + np.pi
+            dip = np.pi - dip
+            strike = strike - np.pi if strike > np.pi else strike + np.pi
+
     #TODO: add array boolean to get strikes correct for dips > pi/2
 
     if output == 'degrees':
@@ -147,7 +149,7 @@ def norm_stress_from_xyz(strike = None, dip = None, stress_tensor = None,
 
     normal_stress =  normal_stress_from_xyz(strike = strike, dip = dip, 
                                             stress_tensor = stress_tensor, 
-                                            angle = 'degrees')
+                                            angle = angle)
     return normal_stress
 
 
@@ -255,36 +257,83 @@ def normal_stress_on_optimal_plane(T, friction_angle = 30,
     return normal_stress_from_xyz(strike, dip, T)
 
 
-def find_optimal_plane(T, friction_angle = None, friction_coefficient = None,
-                        angle = 'degrees'):
+def find_optimal_plane(T, friction_angle=None, friction_coefficient=None,
+                       angle_input='degrees', output_normal_vector=False):
     '''
-    Finds strike and dip of optimal fault plane given a stress tensor T,
-    and an internal friction angle or friction coefficient.
-
-    If no values are specified, defaults to a friction angle of 30 degrees.
-    If both friction angle and friction coefficient are specified,
-    friction angle will override friction coefficient.
-
-    Default angle is in degrees.
+    docs2
     '''
-    
-    if friction_angle == None:
-        if friction_coefficient:
-            friction_angle = np.degrees( np.arctan( friction_coefficient) )
-        else:
-            friction_angle = 30.
+
+    vals, vecs = sorted_eigens(T)
+
+    R = -(vecs.T)
+
+    beta = get_optimal_fault_angle(friction_angle=friction_angle,
+                                   friction_coefficient=friction_coefficient,
+                                   angle_input=angle_input, output='radians')
+
+    opt_plane_normal_vec_rot = np.array( [np.cos(beta), 0., np.sin(beta)] )
+
+    opt_plane_normal_vec = R.T.dot(opt_plane_normal_vec_rot)
+
+    if output_normal_vector == True:
+        return opt_plane_normal_vec
+
     else:
-        if angle == 'radians':
-            friction_angle = np.degrees( friction_angle)
-   
-    angle_from_sigma1 = 45 - friction_angle / 2
-    
-    pT, pN, pP = get_princ_axes_xyz(T)
+        opt_strike, opt_dip = get_sd_from_norm_vec( opt_plane_normal_vec)
+        return opt_strike, opt_dip
 
-    strike = pP.trend - 90
-    dip = pP.plunge - angle_from_sigma1
 
-    return strike, dip
+def get_optimal_fault_angle(friction_coefficient=None, friction_angle=None,
+                            angle_input='degrees', output='degrees'):
+    '''
+    Returns the angle of the optimal fault plane from \sigma_1 (in the 
+    plane defined by \sigma_1 and \sigma_3), given the friction coefficient
+    or friction angle.
+
+    Equivalent to \beta = (arctan( 1/ \mu)) /2 from King, Stein, Lin, 1994.
+
+    Returns a scalar or array (float) of the input size.
+    '''
+
+    if friction_coefficient == None and friction_angle == None:
+        raise Exception('Need to specify friction angle or coefficient!')
+
+    if friction_angle == None:
+        friction_angle = get_friction_angle(friction_coefficient,
+                                            output=angle_input)
+    if angle_input in ['degrees', 'deg']:
+        friction_angle = np.radians(friction_angle)
+    elif angle_input in ['radians', 'rad']:
+        pass
+    else:
+        raise Exception('angle_input needs to be in degrees or radians')
+
+    optimal_fault_angle = (np.pi/2. - friction_angle) / 2.
+
+    if output in ['degrees', 'deg']:
+        optimal_fault_angle = np.degrees(optimal_fault_angle)
+    elif output in ['radians', 'rad']:
+        pass
+    else:
+        raise Exception('output needs to be degrees or radians')
+
+    return optimal_fault_angle
+
+
+def get_friction_angle(friction_coefficient, output='degrees'):
+    '''
+    Takes the coefficient of friction and returns the friction angle.
+
+    Output is by default in degrees.  Specify 'radians' or 'rad' if desired.
+    Returns a scalar or vector (float), equal to size of input.
+    '''
+
+    friction_angle = np.arctan(friction_coefficient)
+
+    if output in ['degrees', 'deg']:
+        friction_angle = np.degrees( friction_angle)
+
+    return friction_angle
 
 
 def make_xyz_stress_tensor(sig_xx = 0, sig_yy = 0, sig_zz = 0, sig_xy = 0,
@@ -868,3 +917,21 @@ def calc_xy_princ_stresses_from_stress_comps(s_xx=0, s_yy=0, s_xy=0):
     max_x, max_y, min_x, min_y = get_cartesian_xy_stress_dirs(T)
 
     return max_x, max_y, min_x, min_y
+
+
+def calc_xy_max_stress_from_stress_comps(s_xx=0., s_yy=0., s_xy=0.):
+    '''
+    Takes the three indepenent stress tensor components for a 2 dimensional
+    stress tensor and returns the magnitude and azimuth of the maximum
+    principal stress.
+
+    Returns a tuple: max_magnitude, max_azimuth
+    '''
+    max_x, max_y, min_x, min_y = calc_xy_princ_stresses_from_stress_comps(
+                                        s_xx=s_xx, x_yy=s_yy, s_xy=s_xy)
+
+    max_mag = np.sqrt(max_x**2 + max_y**2)
+
+    max_az = angle_to_azimuth( np.arctan2(max_y, max_x) )
+
+    return max_mag, max_az
