@@ -928,7 +928,7 @@ def calc_xy_max_stress_from_stress_comps(s_xx=0., s_yy=0., s_xy=0.):
     Returns a tuple: max_magnitude, max_azimuth
     '''
     max_x, max_y, min_x, min_y = calc_xy_princ_stresses_from_stress_comps(
-                                        s_xx=s_xx, x_yy=s_yy, s_xy=s_xy)
+                                        s_xx=s_xx, s_yy=s_yy, s_xy=s_xy)
 
     max_mag = np.sqrt(max_x**2 + max_y**2)
 
